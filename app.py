@@ -5,6 +5,39 @@ import streamlit as st
 
 st.set_page_config(page_title="BCore Reliability Dashboard", page_icon="📊", layout="wide")
 
+# --- BCORE BRANDING: custom footer + hide Streamlit badge ---
+st.markdown(
+    """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    .bcore-footer {
+        position: fixed; bottom: 0; left: 0; width: 100%;
+        padding: 10px 24px; text-align: center;
+        background: rgba(14,17,23,0.92); color: #9aa7b8;
+        font-size: 0.78rem; letter-spacing: 0.4px;
+        border-top: 1px solid #262b36; z-index: 99999;
+    }
+    .bcore-footer b {color: #ffffff;}
+    div.block-container {padding-bottom: 70px;}
+    </style>
+    <div class="bcore-footer">
+        © 2026 <b>BCore</b> • Center of Reliability • Integrity Excellence
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 REQUIRED_SECRETS = ["SHEET_ASSET_REGISTER", "SHEET_WEIBULL_PARAMS", "SHEET_FMEA",
                     "SHEET_PM_SCHEDULE", "SHEET_VALIDATION"]
 missing = [k for k in REQUIRED_SECRETS if k not in st.secrets]
@@ -122,3 +155,24 @@ with tab_chart:
                     tickfont=dict(color="#d62728")),
         legend=dict(x=0.01, y=0.99, bgcolor="rgba(255,255,255,0.6)"))
     st.plotly_chart(fig, use_container_width=True)
+
+# --- BRANDING & UI CLEANUP ---
+st.markdown(
+    """
+    <style>
+    /* 1. Hide the Streamlit Header (contains the Fullscreen button & Menu) */
+    header {visibility: hidden;}
+    #MainMenu {visibility: hidden;}
+    
+    /* 2. Hide the 'Hosted with Streamlit' badge if it appears */
+    .stAppDeployButton {display: none !important;}
+    
+    /* 3. Hide the default footer */
+    footer {visibility: hidden;}
+    </style>
+    <div style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; background: #0e1117; color: #9aa7b8; font-size: 0.8em; border-top: 1px solid #262b36; z-index: 999;">
+        © 2026 <b>BCore</b> • Center of Reliability • Integrity Excellence
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
