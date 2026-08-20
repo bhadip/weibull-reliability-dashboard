@@ -5,28 +5,7 @@ import streamlit as st
 
 st.set_page_config(page_title="BCore Reliability Dashboard", page_icon="📊", layout="wide")
 
-# --- BCORE BRANDING: custom footer + hide Streamlit badge ---
-st.markdown(
-    """
-    <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    .bcore-footer {
-        position: fixed; bottom: 70px; left: 0; width: 100%;
-        padding: 10px 24px; text-align: center;
-        background: rgba(14,17,23,0.92); color: #9aa7b8;
-        font-size: 0.78rem; letter-spacing: 0.4px;
-        border-top: 1px solid #262b36; z-index: 99999;
-    }
-    .bcore-footer b {color: #ffffff;}
-    div.block-container {padding-bottom: 70px;}
-    </style>
-    <div class="bcore-footer">
-        © 2026 <b>BCore</b> • Center of Reliability • Integrity Excellence
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+
 
 
 hide_streamlit_style = """
@@ -160,23 +139,49 @@ with tab_chart:
         legend=dict(x=0.01, y=0.99, bgcolor="rgba(255,255,255,0.6)"))
     st.plotly_chart(fig, use_container_width=True)
 
-# --- BRANDING & UI CLEANUP ---
+
+
+
+# --- NUCLEAR UI CLEANUP & BCORE FOOTER ---
 st.markdown(
-    """
+    '''
     <style>
-    /* 1. Hide the Streamlit Header (contains the Fullscreen button & Menu) */
-    header {visibility: hidden;}
-    #MainMenu {visibility: hidden;}
+    /* Nuke Streamlit Header (Fullscreen, Menu, Deploy) */
+    header, header[data-testid="stHeader"], #MainMenu, .stAppDeployButton, .stDeployButton, [data-testid="stAppDeployButton"] {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+    }
     
-    /* 2. Hide the 'Hosted with Streamlit' badge if it appears */
-    .stAppDeployButton {display: none !important;}
+    /* Nuke Streamlit Footer ("Built with Streamlit") */
+    footer, footer[data-testid="stAppFooter"], .stAppFooter, .stStatusWidget {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+    }
+
+    /* BCore Custom Footer */
+    .bcore-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        padding: 12px 0;
+        background: #0e1117;
+        color: #9aa7b8;
+        font-size: 0.85rem;
+        border-top: 1px solid #262b36;
+        z-index: 999999;
+    }
+    .bcore-footer b {color: #ffffff;}
     
-    /* 3. Hide the default footer */
-    footer {visibility: hidden;}
+    /* Prevent content overlap */
+    div.block-container {padding-bottom: 60px; padding-top: 2rem;}
     </style>
-    <div style="position: fixed; bottom: 70px; left: 0; width: 100%; text-align: center; padding: 10px; background: #0e1117; color: #9aa7b8; font-size: 0.8em; border-top: 1px solid #262b36; z-index: 999;">
-        © 2026 <b>BCore</b> • Center of Reliability • Integrity Excellence
+    <div class="bcore-footer">
+        © 2026 <b>BCore Prasanti</b> • Reliability Engineering • WK2 PHE
     </div>
-    """,
+    ''',
     unsafe_allow_html=True,
 )
