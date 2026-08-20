@@ -12,7 +12,7 @@ st.markdown(
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     .bcore-footer {
-        position: fixed; bottom: 0; left: 0; width: 100%;
+        position: fixed; bottom: 70px; left: 0; width: 100%;
         padding: 10px 24px; text-align: center;
         background: rgba(14,17,23,0.92); color: #9aa7b8;
         font-size: 0.78rem; letter-spacing: 0.4px;
@@ -170,7 +170,7 @@ st.markdown(
     /* 3. Hide the default footer */
     footer {visibility: hidden;}
     </style>
-    <div style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; background: #0e1117; color: #9aa7b8; font-size: 0.8em; border-top: 1px solid #262b36; z-index: 999;">
+    <div style="position: fixed; bottom: 70px; left: 0; width: 100%; text-align: center; padding: 10px; background: #0e1117; color: #9aa7b8; font-size: 0.8em; border-top: 1px solid #262b36; z-index: 999;">
         © 2026 <b>BCore</b> • Center of Reliability • Integrity Excellence
     </div>
     """,
