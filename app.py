@@ -151,37 +151,3 @@ with tab_chart:
         yaxis2=dict(title="Failure Rate", overlaying="y", side="right"),
         legend=dict(x=0.01, y=0.99, bgcolor="rgba(255,255,255,0.6)"))
     st.plotly_chart(fig, use_container_width=True)
-
-# --- FOOTER & CSS ---
-st.markdown("""
-<style>
-/* Nuke Streamlit UI clutter */
-header[data-testid="stHeader"], .stAppDeployButton, [data-testid="stAppDeployButton"], #MainMenu {display:none !important; visibility:hidden !important; height:0 !important;}
-footer[data-testid="stAppFooter"], .stAppFooter {display:none !important; visibility:hidden !important; height:0 !important;}
-
-/* BCore Footer & Disclaimer */
-.bcore-footer {
-    position: fixed; 
-    bottom: 0; /* Perfectly aligns with the wrapper's visible bottom edge */
-    left: 0; 
-    width: 100%; 
-    text-align: center; 
-    padding: 10px 20px; 
-    box-sizing: border-box;
-    background: #0e1117; 
-    color: #9aa7b8; 
-    font-size: 0.78rem; 
-    border-top: 1px solid #262b36; 
-    z-index: 999999;
-}
-.bcore-footer b {color: #ffffff;}
-.bcore-footer .disclaimer {display: block; font-size: 0.7rem; color: #ffcc00; margin-top: 4px;}
-
-/* Prevent overlap */
-div.block-container {padding-bottom: 110px; padding-top: 2rem;}
-</style>
-<div class="bcore-footer">
-    © 2026 <b>BCore</b> • Brawijaya Center Of Reliability & Integrity Excellences
-    <span class="disclaimer">⚠️ DEMO VERSION: Currently utilizing mock-up data for validation and testing purposes.</span>
-</div>
-""", unsafe_allow_html=True)
