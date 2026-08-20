@@ -3,9 +3,8 @@ services:
   bcore-dashboard:
     build: .
     ports:
-      - "8501:8501"
+      - "100.75.220.84:8501:8501"  # Bound to Tailscale, just like your MT4 server
     volumes:
-      # This bind-mount allows you to edit code on the host and see it instantly in the container!
       - .:/app
       - ./.streamlit:/app/.streamlit
     restart: unless-stopped
