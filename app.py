@@ -47,7 +47,11 @@ if missing:
 
 @st.cache_data(ttl=300)
 def read_sheet_csv(url: str, header_keyword: str) -> pd.DataFrame:
-    raw = pd.read_csv(url, header=None)
+    import requests, io
+    # 10 second timeout prevents infinite hanging
+    resp = requests.get(url, timeout=10)
+    resp.raise_for_status()
+    raw = pd.read_csv(io.StringIO(resp.text), header=None)
     header_idx = None
     for i in range(min(20, len(raw))):
         cells = [str(v).strip().lower() for v in raw.iloc[i].tolist()]
