@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  bcore-dashboard:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      # This bind-mount allows you to edit code on the host and see it instantly in the container!
+      - .:/app
+      - ./.streamlit:/app/.streamlit
+    restart: unless-stopped
