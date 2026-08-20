@@ -5,18 +5,6 @@ import streamlit as st
 
 st.set_page_config(page_title="BCore Reliability Dashboard", page_icon="📊", layout="wide")
 
-
-
-
-hide_streamlit_style = """
-<style>
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-</style>
-"""
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
 REQUIRED_SECRETS = ["SHEET_ASSET_REGISTER", "SHEET_WEIBULL_PARAMS", "SHEET_FMEA",
                     "SHEET_PM_SCHEDULE", "SHEET_VALIDATION"]
 missing = [k for k in REQUIRED_SECRETS if k not in st.secrets]
@@ -24,10 +12,34 @@ if missing:
     st.error(f"secrets.toml is missing keys: {', '.join(missing)}. Add the published CSV URLs.")
     st.stop()
 
+# --- TELEGRAM VIEWER NOTIFICATION ---
+def _tg_notify(msg):
+    import requests as _rq
+    token = st.secrets.get("TELEGRAM_BOT_TOKEN", "MISSING")
+    chat_id = st.secrets.get("TELEGRAM_CHAT_ID", "MISSING")
+    if token == "MISSING" or chat_id == "MISSING": return
+    try:
+        _rq.post(
+            f"https://api.telegram.org/bot{token}/sendMessage",
+            data={"chat_id": chat_id, "text": msg},
+            timeout=5,
+        )
+    except Exception: pass
+
+_vip_code = st.secrets.get("VIP_CODE", "bcore-owner")
+is_vip = st.query_params.get("vip", "") == _vip_code
+if not is_vip and not st.session_state.get("tg_sent", False):
+    st.session_state["tg_sent"] = True
+    from datetime import datetime as _dt
+    _tz = "unknown"
+    try: _tz = st.context.timezone
+    except: pass
+    _tg_notify(f"👀 New viewer opened BCore Dashboard\n🕒 {_dt.now().strftime('%Y-%m-%d %H:%M')}\n🌐 {_tz}")
+
+# --- DATA LOADING ---
 @st.cache_data(ttl=300)
 def read_sheet_csv(url: str, header_keyword: str) -> pd.DataFrame:
     import requests, io
-    # 10 second timeout prevents infinite hanging
     resp = requests.get(url, timeout=10, headers={'User-Agent': 'Mozilla/5.0'})
     resp.raise_for_status()
     raw = pd.read_csv(io.StringIO(resp.text), header=None)
@@ -37,8 +49,7 @@ def read_sheet_csv(url: str, header_keyword: str) -> pd.DataFrame:
         if any(header_keyword.lower() in c for c in cells):
             header_idx = i
             break
-    if header_idx is None:
-        raise ValueError(f"Header '{header_keyword}' not found in CSV.")
+    if header_idx is None: raise ValueError(f"Header '{header_keyword}' not found.")
     df = raw.iloc[header_idx + 1:].reset_index(drop=True)
     df.columns = [str(c).strip() for c in raw.iloc[header_idx].tolist()]
     return df.dropna(how="all")
@@ -60,8 +71,7 @@ def read_overall_status(url: str) -> str:
 def to_num(df, cols):
     df = df.copy()
     for c in cols:
-        if c in df.columns:
-            df[c] = pd.to_numeric(df[c], errors="coerce")
+        if c in df.columns: df[c] = pd.to_numeric(df[c], errors="coerce")
     return df
 
 try:
@@ -78,30 +88,30 @@ except Exception as e:
     st.error(f"Failed to load data from Google Sheets: {e}")
     st.stop()
 
+# --- HEADER ---
 st.title("📊 BCore Reliability Dashboard")
 st.caption("Weibull reliability, FMEA risk & PM optimization — WK2 PHE • auto-refresh 5 min")
+
 if "OK" in overall_status.upper():
     st.success(f"SYSTEM HEALTHY — {overall_status}", icon="✅")
 else:
     st.error(f"DATA ISSUE — {overall_status}. Check the Google Sheet before presenting.", icon="🚨")
+
 if st.button("🔄 Refresh Data Now"):
     st.cache_data.clear()
     st.rerun()
 
-if "G_SHEET_EDIT_URL" in st.secrets:
-    st.link_button("✏️ Update Data (Google Sheet)", st.secrets["G_SHEET_EDIT_URL"])
-
+# --- TABS ---
 tab_fmea, tab_pm, tab_chart = st.tabs(["🛡️ FMEA Register", "🛠️ PM Schedule", "📈 Asset Chart Dashboard"])
 
 with tab_fmea:
-    st.subheader("Failure Mode & Effects Analysis (sortable — click column headers)")
-    st.dataframe(df_fmea, use_container_width=True, hide_index=True,
-                 column_config={"RPN": st.column_config.ProgressColumn(
-                     "RPN", min_value=0, max_value=500, format="%.0f")})
+    st.subheader("Failure Mode & Effects Analysis")
+    st.dataframe(df_fmea, hide_index=True, use_container_width=True,
+                 column_config={"RPN": st.column_config.ProgressColumn("RPN", min_value=0, max_value=500, format="%.0f")})
 
 with tab_pm:
-    st.subheader("Preventive Maintenance Optimization (sortable)")
-    st.dataframe(df_pm, use_container_width=True, hide_index=True,
+    st.subheader("Preventive Maintenance Optimization")
+    st.dataframe(df_pm, hide_index=True, use_container_width=True,
                  column_config={
                      "t_optimum_days": st.column_config.NumberColumn("T-optimum (days)", format="%.1f"),
                      "cost_minimum_usd_year": st.column_config.NumberColumn("Cost Min (USD/yr)", format="%.0f")})
@@ -130,64 +140,48 @@ with tab_chart:
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=t, y=rel, name="Reliability (%)", line=dict(color="#1f77b4", width=2.5)))
-    fig.add_trace(go.Scatter(x=t, y=fr, name="Failure Rate", yaxis="y2",
-                             line=dict(color="#d62728", width=2, dash="dash")))
+    fig.add_trace(go.Scatter(x=t, y=fr, name="Failure Rate", yaxis="y2", line=dict(color="#d62728", width=2, dash="dash")))
     if t_opt:
         fig.add_vline(x=t_opt, line_width=1.5, line_dash="dot", line_color="#2ca02c",
                       annotation_text=f"T-opt {t_opt:.0f}d", annotation_position="top left")
     fig.update_layout(
         height=540, hovermode="x unified",
         xaxis=dict(title="Time (days)", range=[0, 450]),
-        yaxis=dict(title="Reliability (%)", range=[0, 105],
-                   tickfont=dict(color="#1f77b4")),
-        yaxis2=dict(title="Failure Rate", overlaying="y", side="right",
-                    tickfont=dict(color="#d62728")),
+        yaxis=dict(title="Reliability (%)", range=[0, 105]),
+        yaxis2=dict(title="Failure Rate", overlaying="y", side="right"),
         legend=dict(x=0.01, y=0.99, bgcolor="rgba(255,255,255,0.6)"))
     st.plotly_chart(fig, use_container_width=True)
 
+# --- FOOTER & CSS ---
+st.markdown("""
+<style>
+/* Nuke Streamlit UI clutter */
+header[data-testid="stHeader"], .stAppDeployButton, [data-testid="stAppDeployButton"], #MainMenu {display:none !important; visibility:hidden !important; height:0 !important;}
+footer[data-testid="stAppFooter"], .stAppFooter {display:none !important; visibility:hidden !important; height:0 !important;}
 
+/* BCore Footer & Disclaimer */
+.bcore-footer {
+    position: fixed; 
+    bottom: 0; /* Perfectly aligns with the wrapper's visible bottom edge */
+    left: 0; 
+    width: 100%; 
+    text-align: center; 
+    padding: 10px 20px; 
+    box-sizing: border-box;
+    background: #0e1117; 
+    color: #9aa7b8; 
+    font-size: 0.78rem; 
+    border-top: 1px solid #262b36; 
+    z-index: 999999;
+}
+.bcore-footer b {color: #ffffff;}
+.bcore-footer .disclaimer {display: block; font-size: 0.7rem; color: #ffcc00; margin-top: 4px;}
 
-
-# --- NUCLEAR UI CLEANUP & BCORE FOOTER ---
-st.markdown(
-    '''
-    <style>
-    /* Nuke Streamlit Header (Fullscreen, Menu, Deploy) */
-    header, header[data-testid="stHeader"], #MainMenu, .stAppDeployButton, .stDeployButton, [data-testid="stAppDeployButton"] {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
-    }
-    
-    /* Nuke Streamlit Footer ("Built with Streamlit") */
-    footer, footer[data-testid="stAppFooter"], .stAppFooter, .stStatusWidget {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
-    }
-
-    /* BCore Custom Footer */
-    .bcore-footer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        text-align: center;
-        padding: 12px 0;
-        background: #0e1117;
-        color: #9aa7b8;
-        font-size: 0.85rem;
-        border-top: 1px solid #262b36;
-        z-index: 999999;
-    }
-    .bcore-footer b {color: #ffffff;}
-    
-    /* Prevent content overlap */
-    div.block-container {padding-bottom: 110px; padding-top: 2rem;}
-    </style>
-    <div class="bcore-footer">
-        © 2026 <b>BCore Prasanti</b> • Reliability Engineering • WK2 PHE
-    </div>
-    ''',
-    unsafe_allow_html=True,
-)
+/* Prevent overlap */
+div.block-container {padding-bottom: 110px; padding-top: 2rem;}
+</style>
+<div class="bcore-footer">
+    © 2026 <b>BCore</b> • Brawijaya Center Of Reliability & Integrity Excellences
+    <span class="disclaimer">⚠️ DEMO VERSION: Currently utilizing mock-up data for validation and testing purposes.</span>
+</div>
+""", unsafe_allow_html=True)
