@@ -28,7 +28,7 @@ if missing:
 def read_sheet_csv(url: str, header_keyword: str) -> pd.DataFrame:
     import requests, io
     # 10 second timeout prevents infinite hanging
-    resp = requests.get(url, timeout=10)
+    resp = requests.get(url, timeout=10, headers={'User-Agent': 'Mozilla/5.0'})
     resp.raise_for_status()
     raw = pd.read_csv(io.StringIO(resp.text), header=None)
     header_idx = None
@@ -45,7 +45,13 @@ def read_sheet_csv(url: str, header_keyword: str) -> pd.DataFrame:
 
 @st.cache_data(ttl=300)
 def read_overall_status(url: str) -> str:
-    raw = pd.read_csv(url, header=None)
+    import urllib.request, io
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as response:
+            raw = pd.read_csv(io.StringIO(response.read().decode('utf-8')), header=None)
+    except Exception as e:
+        return f"FETCH_ERROR: {str(e)}"
     for i in range(min(20, len(raw))):
         if "STATUS KESELURUHAN" in str(raw.iloc[i, 0]).upper():
             return str(raw.iloc[i, 1])
@@ -177,7 +183,7 @@ st.markdown(
     .bcore-footer b {color: #ffffff;}
     
     /* Prevent content overlap */
-    div.block-container {padding-bottom: 60px; padding-top: 2rem;}
+    div.block-container {padding-bottom: 110px; padding-top: 2rem;}
     </style>
     <div class="bcore-footer">
         © 2026 <b>BCore Prasanti</b> • Reliability Engineering • WK2 PHE
