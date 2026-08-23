@@ -98,7 +98,7 @@ if "OK" in overall_status.upper():
 else:
     st.error(f"DATA ISSUE — {overall_status}. Check the Google Sheet before presenting.", icon="🚨")
 
-col1, col2 = st.columns([1, 2])
+col1, col2, col_spacer = st.columns([1, 1, 4])
 with col1:
     if st.button("🔄 Refresh Data Now"):
         st.cache_data.clear()
@@ -106,9 +106,7 @@ with col1:
 with col2:
     edit_url = st.secrets.get("G_SHEET_EDIT_URL", "#")
     if edit_url != "#":
-        st.link_button("✏️ Update Data (Google Sheet)", edit_url, type="primary")
-    else:
-        st.warning("G_SHEET_EDIT_URL missing in secrets.")
+        st.link_button("✏️ Update Data (Google Sheet)", edit_url, use_container_width=True)
 
 # --- TABS ---
 tab_fmea, tab_pm, tab_chart = st.tabs(["🛡️ FMEA Register", "🛠️ PM Schedule", "📈 Asset Chart Dashboard"])
