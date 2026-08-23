@@ -104,13 +104,7 @@ if st.button("🔄 Refresh Data Now"):
 
 edit_url = st.secrets.get("G_SHEET_EDIT_URL", "#")
 if edit_url != "#":
-    st.link_button("✏️ Update Data (Google Sheet)", edit_url):
-        st.cache_data.clear()
-        st.rerun()
-with col2:
-    edit_url = st.secrets.get("G_SHEET_EDIT_URL", "#")
-    if edit_url != "#":
-        st.link_button("✏️ Update Data (Google Sheet)", edit_url, use_container_width=True)
+    st.link_button("✏️ Update Data (Google Sheet)", edit_url)
 
 # --- TABS ---
 tab_fmea, tab_pm, tab_chart = st.tabs(["🛡️ FMEA Register", "🛠️ PM Schedule", "📈 Asset Chart Dashboard"])
