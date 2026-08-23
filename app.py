@@ -41,7 +41,7 @@ if not is_vip and not st.session_state.get("tg_sent", False):
 @st.cache_data(ttl=300)
 def read_sheet_csv(url: str, header_keyword: str) -> pd.DataFrame:
     import requests, io
-    resp = requests.get(url, timeout=10, headers={'User-Agent': 'Mozilla/5.0'})
+    resp = requests.get(url, timeout=30, headers={'User-Agent': 'Mozilla/5.0'})
     resp.raise_for_status()
     raw = pd.read_csv(io.StringIO(resp.text), header=None)
     header_idx = None
@@ -60,7 +60,7 @@ def read_overall_status(url: str) -> str:
     import urllib.request, io
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=30) as response:
             raw = pd.read_csv(io.StringIO(response.read().decode('utf-8')), header=None)
     except Exception as e:
         return f"FETCH_ERROR: {str(e)}"
