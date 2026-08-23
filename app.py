@@ -98,9 +98,13 @@ if "OK" in overall_status.upper():
 else:
     st.error(f"DATA ISSUE — {overall_status}. Check the Google Sheet before presenting.", icon="🚨")
 
-col1, col2 = st.columns([1, 1])
-with col1:
-    if st.button("🔄 Refresh Data Now", use_container_width=True):
+if st.button("🔄 Refresh Data Now"):
+    st.cache_data.clear()
+    st.rerun()
+
+edit_url = st.secrets.get("G_SHEET_EDIT_URL", "#")
+if edit_url != "#":
+    st.link_button("✏️ Update Data (Google Sheet)", edit_url):
         st.cache_data.clear()
         st.rerun()
 with col2:
