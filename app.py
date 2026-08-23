@@ -23,7 +23,7 @@ def _tg_notify(msg):
         _rq.post(
             f"https://api.telegram.org/bot{token}/sendMessage",
             data={"chat_id": chat_id, "text": msg},
-            timeout=5,
+            timeout=60,
         )
     except Exception: pass
 
@@ -41,7 +41,7 @@ if not is_vip and not st.session_state.get("tg_sent", False):
 @st.cache_data(ttl=300)
 def read_sheet_csv(url: str, header_keyword: str) -> pd.DataFrame:
     import requests, io
-    resp = requests.get(url, timeout=30, headers={'User-Agent': 'Mozilla/5.0'})
+    resp = requests.get(url, timeout=60, headers={'User-Agent': 'Mozilla/5.0'})
     resp.raise_for_status()
     raw = pd.read_csv(io.StringIO(resp.text), header=None)
     header_idx = None
@@ -60,7 +60,7 @@ def read_overall_status(url: str) -> str:
     import urllib.request, io
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=30) as response:
+        with urllib.request.urlopen(req, timeout=60) as response:
             raw = pd.read_csv(io.StringIO(response.read().decode('utf-8')), header=None)
     except Exception as e:
         return f"FETCH_ERROR: {str(e)}"
@@ -98,9 +98,9 @@ if "OK" in overall_status.upper():
 else:
     st.error(f"DATA ISSUE — {overall_status}. Check the Google Sheet before presenting.", icon="🚨")
 
-col1, col2, col_spacer = st.columns([1, 1, 4])
+col1, col2 = st.columns([1, 1])
 with col1:
-    if st.button("🔄 Refresh Data Now"):
+    if st.button("🔄 Refresh Data Now", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
 with col2:
