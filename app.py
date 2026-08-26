@@ -38,10 +38,25 @@ if not is_vip and not st.session_state.get("tg_sent", False):
     _tg_notify(f"👀 New viewer opened BCore Dashboard\n🕒 {_dt.now().strftime('%Y-%m-%d %H:%M')}\n🌐 {_tz}")
 
 # --- DATA LOADING ---
+import time as _time
+
+def _fetch_with_retry(url, tries=3, timeout=20):
+    import requests as _req
+    last = None
+    for i in range(tries):
+        try:
+            r = _req.get(url, timeout=timeout, headers={'User-Agent': 'Mozilla/5.0'})
+            r.raise_for_status()
+            return r
+        except Exception as e:
+            last = e
+            _time.sleep(2 ** i)
+    raise last
+
 @st.cache_data(ttl=300)
 def read_sheet_csv(url: str, header_keyword: str) -> pd.DataFrame:
     import requests, io
-    resp = requests.get(url, timeout=60, headers={'User-Agent': 'Mozilla/5.0'})
+    resp = _fetch_with_retry(url)
     resp.raise_for_status()
     raw = pd.read_csv(io.StringIO(resp.text), header=None)
     header_idx = None
@@ -57,11 +72,9 @@ def read_sheet_csv(url: str, header_keyword: str) -> pd.DataFrame:
 
 @st.cache_data(ttl=300)
 def read_overall_status(url: str) -> str:
-    import urllib.request, io
+    import io
     try:
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=60) as response:
-            raw = pd.read_csv(io.StringIO(response.read().decode('utf-8')), header=None)
+        raw = pd.read_csv(io.StringIO(_fetch_with_retry(url).text), header=None)
     except Exception as e:
         return f"FETCH_ERROR: {str(e)}"
     for i in range(min(20, len(raw))):
